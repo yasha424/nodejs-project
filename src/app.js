@@ -32,8 +32,5 @@ export class App {
     this.useExeptionFilters();
     this.server = this.app.listen(this.port);
     this.logger.log(`Server started at http://localhost:${this.port}`);
-    // this.app.get('/', (req, res) => {
-    //   res.send('hi');
-    // });
   }
 }

@@ -2,7 +2,7 @@
 
 ## Description
 
-**This is an app for "NodeJS Basics" course which will allow user to store and see complains left by other users**
+**This is an app for "NodeJS Basics" course which will allow user to store and see complains left by other users.**
 
 ## Stack
 

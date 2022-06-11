@@ -26,12 +26,9 @@ export class BaseController {
   bindRoutes(routes) {
     routes.forEach((route) => {
       this.logger.log(`[${route.method}] ${route.path}`);
-      const middleware = Array.isArray(route.middlewares)
-        ? route.middlewares.map((m) => m.execute.bind(m))
-        : [];
       const handler = route.func.bind(this);
-      const pipeline = middleware ? [...middleware, handler] : handler;
-      this.router[route.method](route.path, pipeline);
+      const middlewares = Array.isArray(route.middlewares) ? route.middlewares : [];
+      this.router[route.method](route.path, [...middlewares, handler]);
     });
   }
 }

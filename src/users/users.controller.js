@@ -22,6 +22,6 @@ export class UserController extends BaseController {
   }
 
   register(req, res, next) {
-    this.created(res, { id: Date.now() });
+    this.ok(res, { id: Date.now(), name: 'Danil', username: 'Germanovich' });
   }
 }

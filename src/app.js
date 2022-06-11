@@ -1,4 +1,5 @@
 import express from 'express';
+import { json } from 'body-parser';
 
 export class App {
   constructor(
@@ -17,6 +18,10 @@ export class App {
     this.exeptionFilter = exeptionFilter;
   }
 
+  useMiddleware() {
+    this.app.use(json());
+  }
+
   useRoutes() {
     this.app.use('/users', this.userController.router);
     this.app.use('/complaints', this.complaintController.router);
@@ -28,6 +33,7 @@ export class App {
   }
 
   async init() {
+    this.useMiddleware();
     this.useRoutes();
     this.useExeptionFilters();
     this.server = this.app.listen(this.port);

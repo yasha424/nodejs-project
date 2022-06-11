@@ -1,4 +1,5 @@
 import { BaseController } from '../common/base.controller.js';
+import { getWeather } from '../services/weather.service.js';
 
 export class ComplaintController extends BaseController {
   constructor(logger) {
@@ -22,12 +23,27 @@ export class ComplaintController extends BaseController {
     });
   }
 
-  getAll(req, res, next) {
-    this.ok(res, {
-      id: Date.now(),
-      latitude: 50.4460921,
-      longitude: 30.4475845
-    });
+  async getAll(req, res, next) {
+    const lat = 50.4460921;
+    const lon = 30.4475845;
+    try {
+      const data = await getWeather(lat, lon);
+
+      this.ok(res, [
+        {
+          id: Date.now(),
+          latitude: lat,
+          longitude: lon,
+          temp: data.main.temp
+        }
+      ]);
+    } catch (e) {
+      this.ok(res, {
+        id: Date.now(),
+        latitude: lat,
+        longitude: lon
+      });
+    }
   }
 
   create(req, res, next) {

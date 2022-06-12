@@ -16,4 +16,4 @@
 
 ## **Database Scheme:**
 
-![diagram](./resources/db-scheme.png)
+![diagram](./resources/db-scheme.png?raw=true)

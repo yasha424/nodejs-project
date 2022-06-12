@@ -15,4 +15,5 @@
 - **_joi_ –** because of it's the most powerful schema description language and data validator for JavaScript
 
 ## **Database Scheme:**
+
 ![diagram](./resources/db-scheme.png)

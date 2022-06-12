@@ -4,12 +4,15 @@ import {
   registerSchema,
   loginSchema,
   updateSchema,
-  deleteSchema
+  deleteSchema,
+  userInfoSchema
 } from './schemas/schemas.js';
+import { UserService } from './users.service.js';
 
 export class UserController extends BaseController {
-  constructor(logger) {
+  constructor(logger, prismaService) {
     super(logger);
+    this.userService = new UserService(prismaService);
     this.bindRoutes([
       {
         path: '/register',
@@ -27,31 +30,49 @@ export class UserController extends BaseController {
       {
         path: '/delete/:id',
         method: 'delete',
-        func: this.delete,
+        func: this.deleteUser,
         middlewares: [validationMiddleware(deleteSchema)]
       },
       {
         path: '/update/:id',
         method: 'put',
-        func: this.update,
+        func: this.updateUser,
         middlewares: [validationMiddleware(updateSchema)]
+      },
+      {
+        path: '/:id',
+        method: 'get',
+        func: this.getUser,
+        middlewares: [validationMiddleware(userInfoSchema)]
       }
     ]);
   }
 
-  delete(req, res, next) {
-    this.ok(res, { id: Date.now() });
+  async getUser(req, res, next) {
+    const result = await this.userService.getUserInfo(parseInt(req.params.id, 10));
+    this.ok(res, result);
   }
 
-  update(req, res, next) {
-    this.ok(res, { id: Date.now(), name: 'Danil' });
+  async deleteUser(req, res, next) {
+    const result = await this.userService.deleteUser(parseInt(req.params.id, 10));
+    this.ok(res, result);
   }
 
-  login(req, res, next) {
-    this.ok(res, { id: Date.now() });
+  async updateUser(req, res, next) {
+    const result = await this.userService.updateUser(
+      parseInt(req.params.id, 10),
+      req.body
+    );
+    this.ok(res, result);
   }
 
-  register(req, res, next) {
-    this.ok(res, { id: Date.now(), name: 'Danil', username: 'Germanovich' });
+  async login(req, res, next) {
+    const result = await this.userService.loginUser(req.body);
+    this.ok(res, result);
+  }
+
+  async register(req, res, next) {
+    const result = await this.userService.createUser(req.body);
+    this.ok(res, result);
   }
 }

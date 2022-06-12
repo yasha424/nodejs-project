@@ -4,10 +4,12 @@ import { LoggerService } from './logger/logger.service.js';
 import { UserController } from './users/users.controller.js';
 import { ComplaintController } from './complaints/complaint.controller.js';
 import { RoleController } from './roles/role.controller.js';
+import { PrismaService } from './database/prisma.service.js';
 
 async function bootstrap() {
   const logger = new LoggerService();
-  const userController = new UserController(logger);
+  const prismaService = new PrismaService(logger);
+  const userController = new UserController(logger, prismaService);
   const complaintController = new ComplaintController(logger);
   const roleController = new RoleController(logger);
   const exeptionFilter = new ExeptionFilter(logger);
@@ -16,7 +18,8 @@ async function bootstrap() {
     userController,
     complaintController,
     roleController,
-    exeptionFilter
+    exeptionFilter,
+    prismaService
   );
   await app.init();
 }

@@ -51,7 +51,10 @@ export class RoleController extends BaseController {
   }
 
   async update(req, res, next) {
-    const result = await this.roleService.updateRole(parseInt(req.params.id, 10), req.body);
+    const result = await this.roleService.updateRole(
+      parseInt(req.params.id, 10),
+      req.body
+    );
     this.ok(res, result);
   }
 

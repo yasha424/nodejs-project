@@ -7,11 +7,12 @@ export class RoleService {
   }
 
   async createRole({ name }) {
-    return await this.rolesRepository.create({ name });
+    return this.rolesRepository.create({ name });
   }
 
   async getRoleInfo(id) {
-    return await this.rolesRepository.findById(id) ?? new HTTPError(404, `Role with id(${id}) not found`);
+    const role = await this.rolesRepository.findById(id);
+    return role ?? new HTTPError(404, `Role with id(${id}) not found`);
   }
 
   async updateRole(id, data) {

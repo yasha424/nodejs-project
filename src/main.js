@@ -11,7 +11,7 @@ async function bootstrap() {
   const prismaService = new PrismaService(logger);
   const userController = new UserController(logger, prismaService);
   const complaintController = new ComplaintController(logger);
-  const roleController = new RoleController(logger);
+  const roleController = new RoleController(logger, prismaService);
   const exeptionFilter = new ExeptionFilter(logger);
   const app = new App(
     logger,

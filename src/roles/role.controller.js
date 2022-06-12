@@ -6,15 +6,17 @@ import {
   updateSchema,
   deleteSchema
 } from './schemas/schemas.js';
+import { RoleService } from './roles.service.js';
 
 export class RoleController extends BaseController {
-  constructor(logger) {
+  constructor(logger, prismaService) {
     super(logger);
+    this.roleService = new RoleService(prismaService);
     this.bindRoutes([
       {
-        path: '/',
+        path: '/:id',
         method: 'get',
-        func: this.getAll,
+        func: this.get,
         middlewares: [validationMiddleware(getSchema)]
       },
       {
@@ -38,22 +40,23 @@ export class RoleController extends BaseController {
     ]);
   }
 
-  getAll(req, res, next) {
-    this.ok(res, [
-      { id: Date.now(), name: 'admin' },
-      { id: Date.now() + 10, name: 'user' }
-    ]);
+  async get(req, res, next) {
+    const result = await this.roleService.getRoleInfo(parseInt(req.params.id, 10));
+    this.ok(res, result);
   }
 
-  create(req, res, next) {
-    this.ok(res, { id: Date.now() });
+  async create(req, res, next) {
+    const result = await this.roleService.createRole(req.body);
+    this.ok(res, result);
   }
 
-  update(req, res, next) {
-    this.ok(res, { id: Date.now() });
+  async update(req, res, next) {
+    const result = await this.roleService.updateRole(parseInt(req.params.id, 10), req.body);
+    this.ok(res, result);
   }
 
-  delete(req, res, next) {
-    this.ok(res, { id: Date.now() });
+  async delete(req, res, next) {
+    const result = await this.roleService.deleteRole(parseInt(req.params.id, 10));
+    this.ok(res, result);
   }
 }

@@ -19,7 +19,7 @@ export class RoleController extends BaseController {
       },
       {
         path: '/create',
-        method: 'put',
+        method: 'post',
         func: this.create,
         middlewares: [validationMiddleware(createSchema)]
       },
@@ -31,7 +31,7 @@ export class RoleController extends BaseController {
       },
       {
         path: '/delete/:id',
-        method: 'put',
+        method: 'delete',
         func: this.delete,
         middlewares: [validationMiddleware(deleteSchema)]
       }

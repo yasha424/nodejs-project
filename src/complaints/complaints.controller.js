@@ -7,10 +7,13 @@ import {
   updateSchema,
   deleteSchema
 } from './schemas/schemas.js';
+import { ComplaintService } from './complaints.service.js';
 
 export class ComplaintController extends BaseController {
-  constructor(logger) {
+  constructor(logger, prismaService) {
     super(logger);
+    this.complaintService = new ComplaintService(prismaService);
+
     this.bindRoutes([
       {
         path: '/',
@@ -39,42 +42,28 @@ export class ComplaintController extends BaseController {
     ]);
   }
 
-  delete(req, res, next) {
-    this.ok(res, { id: Date.now() });
+  async delete(req, res, next) {
+    const result = await this.complaintService.deleteComplaint(
+      parseInt(req.params.id, 10)
+    );
+    this.ok(res, result);
   }
 
-  update(req, res, next) {
-    this.ok(res, {
-      id: Date.now(),
-      latitude: 50.4460971,
-      longitude: 30.4475845
-    });
+  async update(req, res, next) {
+    const result = await this.complaintService.updateComplaint(
+      parseInt(req.params.id, 10),
+      req.body
+    );
+    this.ok(res, result);
   }
 
   async getAll(req, res, next) {
-    const lat = 50.4460921;
-    const lon = 30.4475845;
-    try {
-      const data = await getWeather(lat, lon);
-
-      this.ok(res, [
-        {
-          id: Date.now(),
-          latitude: lat,
-          longitude: lon,
-          temp: data.main.temp
-        }
-      ]);
-    } catch (e) {
-      this.ok(res, {
-        id: Date.now(),
-        latitude: lat,
-        longitude: lon
-      });
-    }
+    const result = await this.complaintService.getAllComplaints();
+    this.ok(res, result);
   }
 
-  create(req, res, next) {
-    this.created(res, { id: Date.now() });
+  async create(req, res, next) {
+    const result = await this.complaintService.createComplaint(req.body);
+    this.ok(res, result);
   }
 }

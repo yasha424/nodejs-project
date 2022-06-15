@@ -11,7 +11,7 @@ export class App {
     prismaService
   ) {
     this.app = express();
-    this.port = 8000;
+    this.port = process.env.PORT ?? 8000;
     this.logger = logger;
     this.userController = userController;
     this.complaintController = complaintController;

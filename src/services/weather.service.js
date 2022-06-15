@@ -5,7 +5,7 @@ const getWeather = async (lat, lon) => {
     params: {
       lat,
       lon,
-      appid: process.env.TOKEN,
+      appid: process.env.WEATHER_TOKEN,
       units: 'metric'
     }
   });

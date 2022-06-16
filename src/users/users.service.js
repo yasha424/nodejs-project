@@ -19,7 +19,7 @@ export class UserService {
   }
 
   async updateUser(id, data) {
-    const user = await this.findById(id);
+    const user = await this.usersRepository.findById(id);
     if (!user) {
       return new HTTPError(404, `User with id(${id}) not found`);
     }
@@ -27,8 +27,8 @@ export class UserService {
   }
 
   async deleteUser(id) {
-    const existedUser = await this.usersRepository.findById(id);
-    if (existedUser) {
+    const user = await this.usersRepository.findById(id);
+    if (!user) {
       return new HTTPError(404, `User with id(${id}) not found`);
     }
     return this.usersRepository.deleteById(id);

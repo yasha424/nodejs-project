@@ -42,6 +42,12 @@ export class UserController extends BaseController {
         method: 'put',
         func: this.updateUser,
         middlewares: [validationMiddleware(updateSchema)]
+      },
+      {
+        path: '/update/:id',
+        method: 'put',
+        func: this.updateUserPassword,
+        middlewares: [validationMiddleware(updateSchema)]
       }
     ]);
   }
@@ -50,10 +56,10 @@ export class UserController extends BaseController {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 
-    if (!token) return this.send(res, 401, 'No token provided');
+    if (!token) return this.send(res, 401, 'Token required');
 
     try {
-      req.user = await verifyJwt(token);
+      req.user = verifyJwt(token);
     } catch (err) {
       return this.send(res, 403, err);
     }
@@ -74,13 +80,13 @@ export class UserController extends BaseController {
     if (!token) return this.send(res, 401, 'No token provided');
 
     try {
-      req.user = await verifyJwt(token);
+      req.user = verifyJwt(token);
     } catch (err) {
       return this.send(res, 403, err);
     }
 
     const result = await this.userService.updateUser(parseInt(req.user.id, 10), req.body);
-    const newToken = await signJwt(result);
+    const newToken = signJwt(result);
     return this.ok(res, { accessToken: newToken });
   }
 
@@ -88,7 +94,7 @@ export class UserController extends BaseController {
     const result = await this.userService.loginUser(req.body);
     if (!result) return this.send(res, 403, 'Email or password is incorrect');
 
-    const token = await signJwt(result);
+    const token = signJwt(result);
     return this.ok(res, { accessToken: token });
   }
 
@@ -101,12 +107,35 @@ export class UserController extends BaseController {
       return this.send(res, 409, `User with email: ${req.body.email} already exists`);
 
     try {
-      const token = await signJwt(result, process.env.ACCESS_TOKEN_SECRET, {
+      const token = signJwt(result, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: '30m'
       });
       return this.ok(res, { accessToken: token });
     } catch (err) {
       return this.send(res, 403, err);
     }
+  }
+
+  async updateUserPassword(req, res, next) {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return this.send(res, 401, 'No token provided');
+
+    try {
+      req.user = verifyJwt(token);
+    } catch (err) {
+      return this.send(res, 403, err);
+    }
+
+    const role = await this.roleService.getRoleInfo(req.user.roleId);
+    if (role.name !== 'admin')
+      return this.send(res, 403, 'You have no privelege to change password of this user');
+
+    const result = await this.userService.updateUser(
+      parseInt(req.params.id, 10),
+      req.body
+    );
+    return this.ok(res, result);
   }
 }

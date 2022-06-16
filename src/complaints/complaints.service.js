@@ -16,23 +16,31 @@ export class ComplaintService {
     });
   }
 
+  async getComplaintById(id) {
+    const complaint = await this.complaintsRepository.findById(id);
+    if (!complaint) {
+      throw new HTTPError(403, `Complaint with id(${id}) not found`);
+    }
+    return complaint;
+  }
+
   async getAllComplaints() {
-    const role = await this.complaintsRepository.getAll();
-    return role ?? new HTTPError(404, `Complaints not found`);
+    const complaints = await this.complaintsRepository.getAll();
+    return complaints ?? new HTTPError(403, `Complaints not found`);
   }
 
   async updateComplaint(id, data) {
-    const role = await this.complaintsRepository.findById(id);
-    if (!role) {
-      return new HTTPError(404, `Complaint with id(${id}) not found`);
+    const complaint = await this.complaintsRepository.findById(id);
+    if (!complaint) {
+      return new HTTPError(403, `Complaint with id(${id}) not found`);
     }
     return this.complaintsRepository.update(id, data);
   }
 
   async deleteComplaint(id) {
-    const existedRole = await this.complaintsRepository.findById(id);
-    if (!existedRole) {
-      return new HTTPError(404, `Complaint with id(${id}) not found`);
+    const complaint = await this.complaintsRepository.findById(id);
+    if (!complaint) {
+      return new HTTPError(403, `Complaint with id(${id}) not found`);
     }
     return this.complaintsRepository.deleteById(id);
   }

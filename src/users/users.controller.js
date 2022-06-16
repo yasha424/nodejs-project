@@ -69,7 +69,9 @@ export class UserController extends BaseController {
       return this.send(res, 403, 'You have no privelege to delete this user');
 
     const result = await this.userService.deleteUser(parseInt(req.params.id, 10));
-    await this.roleService.deleteRole(parseInt(result.roleId, 10));
+    if (result.roleId) {
+      await this.roleService.deleteRole(parseInt(result.roleId, 10));
+    }
     return this.ok(res, result);
   }
 

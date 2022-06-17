@@ -9,6 +9,7 @@ import {
 } from './schemas/schemas.js';
 import { UserService } from './users.service.js';
 import { RoleService } from '../roles/roles.service.js';
+import { ComplaintService } from '../complaints/complaints.service.js';
 import { HTTPError } from '../errors/http-error.class.js';
 import { verifyJwt, signJwt } from '../common/verify.jwt.js';
 
@@ -17,6 +18,7 @@ export class UserController extends BaseController {
     super(logger);
     this.userService = new UserService(prismaService);
     this.roleService = new RoleService(prismaService);
+    this.complaintService = new ComplaintService(prismaService);
     this.bindRoutes([
       {
         path: '/register',
@@ -67,6 +69,8 @@ export class UserController extends BaseController {
     const role = await this.roleService.getRoleInfo(req.user.roleId);
     if (role.name !== 'admin')
       return this.send(res, 403, 'You have no privelege to delete this user');
+
+    await this.complaintService.deleteComplaintsByUserId(parseInt(req.params.id, 10));
 
     const result = await this.userService.deleteUser(parseInt(req.params.id, 10));
     if (result.roleId) {

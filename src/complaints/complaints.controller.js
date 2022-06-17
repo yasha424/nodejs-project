@@ -8,71 +8,142 @@ import {
   deleteSchema
 } from './schemas/schemas.js';
 import { ComplaintService } from './complaints.service.js';
+import { RoleService } from '../roles/roles.service.js';
+import { verifyJwt } from '../common/verify.jwt.js';
 
 export class ComplaintController extends BaseController {
   constructor(logger, prismaService) {
     super(logger);
     this.complaintService = new ComplaintService(prismaService);
+    this.roleService = new RoleService(prismaService);
 
     this.bindRoutes([
       {
         path: '/',
         method: 'get',
-        func: this.getAll,
+        func: this.getAllComplaints,
+        middlewares: [validationMiddleware(getSchema)]
+      },
+      {
+        path: '/:id',
+        method: 'get',
+        func: this.getAllComplaintsById,
         middlewares: [validationMiddleware(getSchema)]
       },
       {
         path: '/create',
         method: 'post',
-        func: this.create,
+        func: this.createComplaint,
         middlewares: [validationMiddleware(createSchema)]
       },
       {
         path: '/update/:id',
         method: 'put',
-        func: this.update,
+        func: this.updateComplaint,
         middlewares: [validationMiddleware(updateSchema)]
       },
       {
         path: '/delete/:id',
         method: 'delete',
-        func: this.delete,
+        func: this.deleteComplaint,
         middlewares: [validationMiddleware(deleteSchema)]
       },
       {
         path: '/:id/weather',
         method: 'get',
-        func: this.getWeatherById
+        func: this.getWeatherByComplaintId
       }
     ]);
   }
 
-  async delete(req, res, next) {
+  async deleteComplaint(req, res, next) {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return this.send(res, 401, 'Token required');
+
+    try {
+      req.user = verifyJwt(token);
+    } catch (err) {
+      return this.send(res, 403, err);
+    }
+
+    const role = await this.roleService.getRoleInfo(req.user.roleId);
+    const complaint = await this.complaintService.getComplaintById(
+      parseInt(req.params.id, 10)
+    );
+
+    if (complaint.userId !== req.user.id && role.name !== 'admin') {
+      return this.send(res, 403, 'You have no access to delete this complaint');
+    }
+
     const result = await this.complaintService.deleteComplaint(
       parseInt(req.params.id, 10)
     );
-    this.ok(res, result);
+    return this.ok(res, result);
   }
 
-  async update(req, res, next) {
+  async updateComplaint(req, res, next) {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return this.send(res, 401, 'Token required');
+
+    try {
+      req.user = verifyJwt(token);
+    } catch (err) {
+      return this.send(res, 403, err);
+    }
+
+    const role = await this.roleService.getRoleInfo(req.user.roleId);
+
+    const complaint = await this.complaintService.getComplaintById(
+      parseInt(req.params.id, 10)
+    );
+
+    if (complaint.userId !== req.user.id && role.name !== 'admin') {
+      return this.send(res, 403, 'You have no access to change this complaint');
+    }
+
     const result = await this.complaintService.updateComplaint(
       parseInt(req.params.id, 10),
       req.body
     );
-    this.ok(res, result);
+    return this.ok(res, result);
   }
 
-  async getAll(req, res, next) {
+  async getAllComplaints(req, res, next) {
     const result = await this.complaintService.getAllComplaints();
-    this.ok(res, result);
+    return this.ok(res, result);
   }
 
-  async create(req, res, next) {
+  async getAllComplaintsById(req, res, next) {
+    const result = await this.complaintService.getAllComplaintsByUserId(
+      parseInt(req.params.id, 10)
+    );
+    return this.ok(res, result);
+  }
+
+  async createComplaint(req, res, next) {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return this.send(res, 401, 'No token provided');
+
+    try {
+      req.user = verifyJwt(token);
+    } catch (err) {
+      return this.send(res, 403, err);
+    }
+
+    req.body.userId = req.user.id;
+    const date = new Date().toISOString();
+    req.body.date = date;
     const result = await this.complaintService.createComplaint(req.body);
-    this.ok(res, result);
+    return this.ok(res, result);
   }
 
-  async getWeatherById(req, res, next) {
+  async getWeatherByComplaintId(req, res, next) {
     try {
       const complaint = await this.complaintService.getComplaintById(
         parseInt(req.params.id, 10)

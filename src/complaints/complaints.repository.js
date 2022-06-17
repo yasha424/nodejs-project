@@ -38,10 +38,26 @@ export class ComplaintsRepository {
     });
   }
 
+  async findByUserId(userId) {
+    return this.prismaService.client.complaint.findMany({
+      where: {
+        userId
+      }
+    });
+  }
+
   async deleteById(id) {
     return this.prismaService.client.complaint.delete({
       where: {
         id
+      }
+    });
+  }
+
+  async deleteByUserId(userId) {
+    return this.prismaService.client.complaint.deleteMany({
+      where: {
+        userId
       }
     });
   }

@@ -19,7 +19,7 @@ export class ComplaintService {
   async getComplaintById(id) {
     const complaint = await this.complaintsRepository.findById(id);
     if (!complaint) {
-      return new HTTPError(403, `Complaint with id(${id}) not found`);
+      throw new HTTPError(403, `Complaint with id(${id}) not found`);
     }
     return complaint;
   }

@@ -34,13 +34,13 @@ export class RoleController extends BaseController {
         path: '/delete/:id',
         method: 'delete',
         func: this.deleteRoleById,
-        middlewares: [authMiddleware, validationMiddleware(updateSchema)]
+        middlewares: [authMiddleware, validationMiddleware(deleteSchema)]
       },
       {
         path: '/create',
         method: 'post',
         func: this.create,
-        middlewares: [authMiddleware, validationMiddleware(updateSchema)]
+        middlewares: [authMiddleware, validationMiddleware(createSchema)]
       }
     ]);
   }
@@ -71,13 +71,12 @@ export class RoleController extends BaseController {
     if (role.name !== 'admin')
       return this.send(res, 403, 'You have no privelege to delete roles');
 
-    await this.roleService.deleteRole(parseInt(req.params.id, 10));
-
-    const result = await this.userService.deleteUser(parseInt(req.params.id, 10));
-    if (result) {
+    try {
+      const result = await this.roleService.deleteRole(parseInt(req.params.id, 10));
       return this.ok(res, result);
+    } catch (err) {
+      return this.send(res, 403, err);
     }
-    return res.send(res, 403, `No user with id ${req.params.id} found`);
   }
 
   async create(req, res, next) {
@@ -85,7 +84,7 @@ export class RoleController extends BaseController {
     if (role.name !== 'admin')
       return this.send(res, 403, 'You have no privelege to create roles');
 
-    const result = await this.roleService.createRole(req.body.name);
+    const result = await this.roleService.createRole(req.body);
 
     return this.ok(res, result);
   }

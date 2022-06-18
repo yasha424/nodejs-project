@@ -26,7 +26,7 @@ export class RoleService {
   async deleteRole(id) {
     const existedRole = await this.rolesRepository.findById(id);
     if (!existedRole) {
-      return new HTTPError(404, `Role with id(${id}) not found`);
+      throw new HTTPError(404, `Role with id(${id}) not found`);
     }
     return this.rolesRepository.deleteById(id);
   }

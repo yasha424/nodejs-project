@@ -63,9 +63,7 @@ export class UserController extends BaseController {
     await this.complaintService.deleteComplaintsByUserId(parseInt(req.params.id, 10));
 
     const result = await this.userService.deleteUser(parseInt(req.params.id, 10));
-    if (result.roleId) {
-      await this.roleService.deleteRole(parseInt(result.roleId, 10));
-    } else {
+    if (!result.id) {
       return res.send(res, 403, `No user with id ${req.params.id} found`);
     }
     return this.ok(res, result);

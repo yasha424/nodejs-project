@@ -48,7 +48,7 @@ export class UserController extends BaseController {
       {
         path: '/update/:id',
         method: 'put',
-        func: this.updateUserPassword,
+        func: this.updateUserById,
         middlewares: [validationMiddleware(updateSchema)]
       }
     ]);
@@ -75,6 +75,8 @@ export class UserController extends BaseController {
     const result = await this.userService.deleteUser(parseInt(req.params.id, 10));
     if (result.roleId) {
       await this.roleService.deleteRole(parseInt(result.roleId, 10));
+    } else {
+      return res.send(res, 403, `No user with id ${req.params.id} found`);
     }
     return this.ok(res, result);
   }
@@ -122,7 +124,7 @@ export class UserController extends BaseController {
     }
   }
 
-  async updateUserPassword(req, res, next) {
+  async updateUserById(req, res, next) {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -138,10 +140,14 @@ export class UserController extends BaseController {
     if (role.name !== 'admin')
       return this.send(res, 403, 'You have no privelege to change password of this user');
 
-    const result = await this.userService.updateUser(
-      parseInt(req.params.id, 10),
-      req.body
-    );
-    return this.ok(res, result);
+    try {
+      const result = await this.userService.updateUser(
+        parseInt(req.params.id, 10),
+        req.body
+      );
+      return this.ok(res, result);
+    } catch (err) {
+      return this.send(res, 403, err);
+    }
   }
 }

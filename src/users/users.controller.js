@@ -9,6 +9,7 @@ import {
 } from './schemas/schemas.js';
 import { UserService } from './users.service.js';
 import { RoleService } from '../roles/roles.service.js';
+import { ComplaintService } from '../complaints/complaints.service.js';
 import { HTTPError } from '../errors/http-error.class.js';
 import { verifyJwt, signJwt } from '../common/verify.jwt.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
@@ -18,6 +19,7 @@ export class UserController extends BaseController {
     super(logger);
     this.userService = new UserService(prismaService);
     this.roleService = new RoleService(prismaService);
+    this.complaintService = new ComplaintService(prismaService);
     this.bindRoutes([
       {
         path: '/register',
@@ -47,7 +49,7 @@ export class UserController extends BaseController {
       {
         path: '/update/:id',
         method: 'put',
-        func: this.updateUserPassword,
+        func: this.updateUserById,
         middlewares: [authMiddleware, validationMiddleware(updateSchema)]
       }
     ]);
@@ -58,9 +60,13 @@ export class UserController extends BaseController {
     if (role.name !== 'admin')
       return this.send(res, 403, 'You have no privelege to delete this user');
 
+    await this.complaintService.deleteComplaintsByUserId(parseInt(req.params.id, 10));
+
     const result = await this.userService.deleteUser(parseInt(req.params.id, 10));
     if (result.roleId) {
       await this.roleService.deleteRole(parseInt(result.roleId, 10));
+    } else {
+      return res.send(res, 403, `No user with id ${req.params.id} found`);
     }
     return this.ok(res, result);
   }
@@ -97,15 +103,19 @@ export class UserController extends BaseController {
     }
   }
 
-  async updateUserPassword(req, res, next) {
+  async updateUserById(req, res, next) {
     const role = await this.roleService.getRoleInfo(req.user.roleId);
     if (role.name !== 'admin')
       return this.send(res, 403, 'You have no privelege to change password of this user');
 
-    const result = await this.userService.updateUser(
-      parseInt(req.params.id, 10),
-      req.body
-    );
-    return this.ok(res, result);
+    try {
+      const result = await this.userService.updateUser(
+        parseInt(req.params.id, 10),
+        req.body
+      );
+      return this.ok(res, result);
+    } catch (err) {
+      return this.send(res, 403, err);
+    }
   }
 }

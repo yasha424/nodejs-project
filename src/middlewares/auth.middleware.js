@@ -3,9 +3,16 @@ import { HTTPError } from '../errors/http-error.class.js';
 
 export const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(' ')[1];
 
-  if (!token) return next(new HTTPError(403, 'No token provided'));
+  if (!authHeader) {
+    return next(new HTTPError(403, 'No token provided'));
+  }
+  const token = authHeader.split(' ')[1];
+  const type = authHeader.split(' ')[0];
+
+  if (type !== 'Bearer' || !token) {
+    return next(new HTTPError(403, 'Wrong token type'));
+  }
 
   try {
     req.user = verifyJwt(token);

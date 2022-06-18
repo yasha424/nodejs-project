@@ -86,9 +86,8 @@ export class UserController extends BaseController {
   }
 
   async register(req, res, next) {
-    const role = await this.roleService.createRole({ name: 'user' });
-    req.body.roleId = role.id;
     const result = await this.userService.createUser(req.body);
+    req.body.roleId = 2;
 
     if (!result)
       return this.send(res, 409, `User with email: ${req.body.email} already exists`);

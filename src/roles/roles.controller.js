@@ -27,7 +27,19 @@ export class RoleController extends BaseController {
       {
         path: '/update/:id',
         method: 'put',
-        func: this.update,
+        func: this.updateRoleById,
+        middlewares: [authMiddleware, validationMiddleware(updateSchema)]
+      },
+      {
+        path: '/delete/:id',
+        method: 'delete',
+        func: this.deleteRoleById,
+        middlewares: [authMiddleware, validationMiddleware(updateSchema)]
+      },
+      {
+        path: '/create',
+        method: 'post',
+        func: this.create,
         middlewares: [authMiddleware, validationMiddleware(updateSchema)]
       }
     ]);
@@ -38,16 +50,43 @@ export class RoleController extends BaseController {
     this.ok(res, result);
   }
 
-  async update(req, res, next) {
+  async updateRoleById(req, res, next) {
     const role = await this.roleService.getRoleInfo(req.user.roleId);
     if (role.name !== 'admin')
       return this.send(res, 403, 'You have no privelege to update role of this user');
 
-    const user = await this.userService.getUserInfo(parseInt(req.params.id, 10));
-    if (user) {
-      const result = await this.roleService.updateRole(user.roleId, req.body);
+    try {
+      const result = await this.roleService.updateRole(
+        parseInt(req.params.id, 10),
+        req.body
+      );
+      return this.ok(res, result);
+    } catch (err) {
+      return this.send(res, 403, err);
+    }
+  }
+
+  async deleteRoleById(req, res, next) {
+    const role = await this.roleService.getRoleInfo(req.user.roleId);
+    if (role.name !== 'admin')
+      return this.send(res, 403, 'You have no privelege to delete roles');
+
+    await this.roleService.deleteRole(parseInt(req.params.id, 10));
+
+    const result = await this.userService.deleteUser(parseInt(req.params.id, 10));
+    if (result) {
       return this.ok(res, result);
     }
-    return this.send(res, 403, `No user with id ${req.params.id} found`);
+    return res.send(res, 403, `No user with id ${req.params.id} found`);
+  }
+
+  async create(req, res, next) {
+    const role = await this.roleService.getRoleInfo(req.user.roleId);
+    if (role.name !== 'admin')
+      return this.send(res, 403, 'You have no privelege to create roles');
+
+    const result = await this.roleService.createRole(req.body.name);
+
+    return this.ok(res, result);
   }
 }

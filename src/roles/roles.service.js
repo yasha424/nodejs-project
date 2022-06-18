@@ -18,7 +18,7 @@ export class RoleService {
   async updateRole(id, data) {
     const role = await this.rolesRepository.findById(id);
     if (!role) {
-      return new HTTPError(404, `Role with id(${id}) not found`);
+      throw new HTTPError(403, `Role with id(${id}) not found`);
     }
     return this.rolesRepository.update(id, data);
   }

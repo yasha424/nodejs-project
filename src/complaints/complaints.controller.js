@@ -75,19 +75,22 @@ export class ComplaintController extends BaseController {
   async updateComplaint(req, res, next) {
     const role = await this.roleService.getRoleInfo(req.user.roleId);
 
-    const complaint = await this.complaintService.getComplaintById(
-      parseInt(req.params.id, 10)
-    );
+    try {
+      const complaint = await this.complaintService.getComplaintById(
+        parseInt(req.params.id, 10)
+      );
+      if (complaint.userId !== req.user.id && role.name !== 'admin') {
+        return this.send(res, 403, 'You have no access to change this complaint');
+      }
 
-    if (complaint.userId !== req.user.id && role.name !== 'admin') {
-      return this.send(res, 403, 'You have no access to change this complaint');
+      const result = await this.complaintService.updateComplaint(
+        parseInt(req.params.id, 10),
+        req.body
+      );
+      return this.ok(res, result);
+    } catch (err) {
+      return this.send(res, err.statusCode, err);
     }
-
-    const result = await this.complaintService.updateComplaint(
-      parseInt(req.params.id, 10),
-      req.body
-    );
-    return this.ok(res, result);
   }
 
   async getAllComplaints(req, res, next) {

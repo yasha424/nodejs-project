@@ -1,5 +1,4 @@
 import { BaseController } from '../common/base.controller.js';
-import { validationMiddleware } from '../common/validation.middleware.js';
 import {
   getSchema,
   createSchema,
@@ -9,6 +8,8 @@ import {
 import { RoleService } from './roles.service.js';
 import { UserService } from '../users/users.service.js';
 import { verifyJwt } from '../common/verify.jwt.js';
+import { validationMiddleware } from '../middlewares/validation.middleware.js';
+import { authMiddleware } from '../middlewares/auth.middleware.js';
 
 export class RoleController extends BaseController {
   constructor(logger, prismaService) {
@@ -27,7 +28,7 @@ export class RoleController extends BaseController {
         path: '/update/:id',
         method: 'put',
         func: this.update,
-        middlewares: [validationMiddleware(updateSchema)]
+        middlewares: [authMiddleware, validationMiddleware(updateSchema)]
       }
     ]);
   }
@@ -38,17 +39,6 @@ export class RoleController extends BaseController {
   }
 
   async update(req, res, next) {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) return this.send(res, 401, 'Token required');
-
-    try {
-      req.user = verifyJwt(token);
-    } catch (err) {
-      return this.send(res, 403, err);
-    }
-
     const role = await this.roleService.getRoleInfo(req.user.roleId);
     if (role.name !== 'admin')
       return this.send(res, 403, 'You have no privelege to update role of this user');

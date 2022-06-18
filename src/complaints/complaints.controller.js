@@ -1,6 +1,6 @@
 import { BaseController } from '../common/base.controller.js';
 import { getWeather } from '../services/weather.service.js';
-import { validationMiddleware } from '../common/validation.middleware.js';
+import { validationMiddleware } from '../middlewares/validation.middleware.js';
 import {
   getSchema,
   createSchema,
@@ -9,7 +9,7 @@ import {
 } from './schemas/schemas.js';
 import { ComplaintService } from './complaints.service.js';
 import { RoleService } from '../roles/roles.service.js';
-import { verifyJwt } from '../common/verify.jwt.js';
+import { authMiddleware } from '../middlewares/auth.middleware.js';
 
 export class ComplaintController extends BaseController {
   constructor(logger, prismaService) {
@@ -34,19 +34,19 @@ export class ComplaintController extends BaseController {
         path: '/create',
         method: 'post',
         func: this.createComplaint,
-        middlewares: [validationMiddleware(createSchema)]
+        middlewares: [authMiddleware, validationMiddleware(createSchema)]
       },
       {
         path: '/update/:id',
         method: 'put',
         func: this.updateComplaint,
-        middlewares: [validationMiddleware(updateSchema)]
+        middlewares: [authMiddleware, validationMiddleware(updateSchema)]
       },
       {
         path: '/delete/:id',
         method: 'delete',
         func: this.deleteComplaint,
-        middlewares: [validationMiddleware(deleteSchema)]
+        middlewares: [authMiddleware, validationMiddleware(deleteSchema)]
       },
       {
         path: '/:id/weather',
@@ -57,17 +57,6 @@ export class ComplaintController extends BaseController {
   }
 
   async deleteComplaint(req, res, next) {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) return this.send(res, 401, 'Token required');
-
-    try {
-      req.user = verifyJwt(token);
-    } catch (err) {
-      return this.send(res, 403, err);
-    }
-
     const role = await this.roleService.getRoleInfo(req.user.roleId);
     const complaint = await this.complaintService.getComplaintById(
       parseInt(req.params.id, 10)
@@ -84,17 +73,6 @@ export class ComplaintController extends BaseController {
   }
 
   async updateComplaint(req, res, next) {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) return this.send(res, 401, 'Token required');
-
-    try {
-      req.user = verifyJwt(token);
-    } catch (err) {
-      return this.send(res, 403, err);
-    }
-
     const role = await this.roleService.getRoleInfo(req.user.roleId);
 
     const complaint = await this.complaintService.getComplaintById(
@@ -125,17 +103,6 @@ export class ComplaintController extends BaseController {
   }
 
   async createComplaint(req, res, next) {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) return this.send(res, 401, 'No token provided');
-
-    try {
-      req.user = verifyJwt(token);
-    } catch (err) {
-      return this.send(res, 403, err);
-    }
-
     req.body.userId = req.user.id;
     const date = new Date().toISOString();
     req.body.date = date;
